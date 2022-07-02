@@ -11,7 +11,7 @@ export const Home = () => {
   // true = open, false = don't open, undefined = waiting for recommendation
   const [shouldOpenWindow, setShouldOpenWindow] = useState(undefined);
 
-  const [airQuality, setAirQuality] = useState();
+  const [airQualityData, setAirQualityData] = useState();
   const [postcode, setPostcode] = useState();
 
   // TODO - customise this
@@ -110,10 +110,11 @@ export const Home = () => {
     );
 
     if (res.ok === true) {
-      const data = await res.json();
-      setAirQuality(data.stations);
+      const { stations } = await res.json();
 
-      return data.stations;
+      setAirQualityData(stations);
+
+      return stations;
     }
   }, []);
 
@@ -165,7 +166,7 @@ export const Home = () => {
 
                       <Chart
                         options={options}
-                        series={[airQuality[0]["AQI"]]}
+                        series={[airQualityData[0]["AQI"]]}
                         type="radialBar"
                         width="500"
                       />
