@@ -1,0 +1,25 @@
+
+
+.box {
+  background-color: white;
+  /* background-image: url("https://free4kwallpapers.com/uploads/originals/2019/10/31/blue-minimalist-mountain-range-wallpaper.jpg"); */
+  background-position: center;
+} 
+
+.formLabel {
+  margin-left: auto;
+  margin-right: auto;
+  width: 49em;
+  color: black;
+}
+
+.h1 {
+  background-image: url(https://media.giphy.com/media/26BROrSHlmyzzHf3i/giphy.gif);
+  background-size: cover;
+  color: transparent;
+  -moz-background-clip: text;
+  -webkit-background-clip: text;
+  text-transform: uppercase;
+  font-size: 120px;
+  margin: 10px 0;
+}
