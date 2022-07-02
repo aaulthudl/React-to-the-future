@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import App from './App';
 import {ExampleFetch} from './screens/example'
+import {GeoCode} from './screens/geocode'
 import reportWebVitals from './reportWebVitals';
 import * as serviceWorker from './serviceWorker';
 
@@ -21,6 +22,7 @@ root.render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/api" element={<ExampleFetch />} />
+        <Route path="/geocode" element={<GeoCode />} />
       </Routes>
       </BrowserRouter>
   </StrictMode>
