@@ -4,14 +4,14 @@ import {
   Text,
   Input, FormControl, FormLabel, Button,
 } from '@chakra-ui/react';
-import {Nav} from '../components/bottom-nav';
 import Chart from "react-apexcharts";
 import Geocode from "react-geocode";
 
 export const Home = () => {
-  const [resultFetched, setResultFetched] = useState(false);
+  // true = open, false = don't open, undefined = waiting for recommendation
+  const [shouldOpenWindow, setShouldOpenWindow] = useState(undefined);
 
-  const [airQuality, setAirQuality] = useState();
+  const [airQualityData, setAirQualityData] = useState();
   const [postcode, setPostcode] = useState();
 
   // TODO - customise this
@@ -110,10 +110,11 @@ export const Home = () => {
     );
 
     if (res.ok === true) {
-      const data = await res.json();
-      setAirQuality(data.stations);
+      const { stations } = await res.json();
 
-      return data.stations;
+      setAirQualityData(stations);
+
+      return stations;
     }
   }, []);
 
@@ -130,18 +131,19 @@ export const Home = () => {
   }, []);
 
   const handlePostcodeChange = useCallback((event) => {
-    setResultFetched(false);
+    setShouldOpenWindow(undefined);
     
     setPostcode(event.target.value);
   }, []);
   
   const handlePostcodeSubmit = useCallback(async () => {
     const res = await convertPostcodeToLatLon(postcode);
+
+    // TODO - put other fetches here
     const data = await getAirQuality(res.lat, res.lng);
 
-    if (data !== undefined) {
-      setResultFetched(true);
-    }
+    // TODO - make a recommendation
+    setShouldOpenWindow(false);
   }, [convertPostcodeToLatLon, postcode, getAirQuality]);
 
     return (
@@ -154,15 +156,17 @@ export const Home = () => {
                     <Button onClick={handlePostcodeSubmit}>Let's go</Button>
                   </FormControl>
 
-                  { resultFetched && (
+                  { shouldOpenWindow !== undefined && (
                     <>
-                      <Text pt={10} bg="white">
-                        Air Quality: {airQuality[0]["AQI"]}
-                      </Text>
+                      { shouldOpenWindow ? (
+                        <Text pt={10} bg="white">Open the window</Text>
+                      ) : (
+                        <Text pt={10} bg="white">Don't open the window</Text>
+                      )}
 
                       <Chart
                         options={options}
-                        series={[airQuality[0]["AQI"]]}
+                        series={[airQualityData[0]["AQI"]]}
                         type="radialBar"
                         width="500"
                       />
@@ -170,7 +174,6 @@ export const Home = () => {
                   )}
                 </Box>
              </Box>
-            <Nav />
         </Box>
     );
 }
