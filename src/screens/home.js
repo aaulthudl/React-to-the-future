@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Text,
@@ -6,6 +6,7 @@ import {
 } from '@chakra-ui/react';
 import {Nav} from '../components/bottom-nav';
 import Chart from "react-apexcharts";
+import Geocode from "react-geocode";
 
 export const Home = () => {
   const [resultFetched, setResultFetched] = useState(false);
@@ -13,6 +14,7 @@ export const Home = () => {
   const [airQuality, setAirQuality] = useState();
   const [postcode, setPostcode] = useState();
 
+  // TODO - customise this
   const options = {
     series: [75],
     chart: {
@@ -94,9 +96,9 @@ export const Home = () => {
   };
 
 
-  const getAirQuality = useCallback(async () => {
+  const getAirQuality = useCallback(async (lat, lng) => {
     const res = await fetch(
-      'https://api.ambeedata.com/latest/by-lat-lng?lat=51.530112&lng=-0.0822173',
+      `https://api.ambeedata.com/latest/by-lat-lng?lat=${lat}&lng=${lng}`,
       {
         method: 'GET',
         headers: {
@@ -115,6 +117,18 @@ export const Home = () => {
     }
   }, []);
 
+  const convertPostcodeToLatLon = useCallback(async (postcode) => {
+    Geocode.setApiKey("AIzaSyD_G7EMILNLxo0NdXBtZnRS7QmIw0dZc4U");
+    Geocode.setLanguage("en");
+    Geocode.enableDebug();
+
+    // TODO: maybe add error handling
+    const response = await Geocode.fromAddress(postcode);
+    const { lat, lng }  = response.results[0].geometry.location;
+
+    return { lat, lng };
+  }, []);
+
   const handlePostcodeChange = useCallback((event) => {
     setResultFetched(false);
     
@@ -122,12 +136,13 @@ export const Home = () => {
   }, []);
   
   const handlePostcodeSubmit = useCallback(async () => {
-    const data = await getAirQuality();
+    const res = await convertPostcodeToLatLon(postcode);
+    const data = await getAirQuality(res.lat, res.lng);
 
     if (data !== undefined) {
       setResultFetched(true);
     }
-  }, []);
+  }, [convertPostcodeToLatLon, postcode, getAirQuality]);
 
     return (
         <Box minH="100vh">
