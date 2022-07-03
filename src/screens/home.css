@@ -22,21 +22,28 @@
   align-items: center;
 }
 
-.openWindowImage {
-  width: 500px;
-}
-
-.openWindowResultContainer {
+.windowResultContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  padding-bottom: 30px;
 }
 
 .openWindowText {
   font-size: 50px;
   line-height: 1;
   padding-bottom: 14px;
+  animation: expandLetterSpacing 2s ease-in-out;
+  letter-spacing: 5px;
+}
+
+.closeWindowText {
+  font-size: 50px;
+  line-height: 1;
+  padding-bottom: 14px;
+  animation: contractLetterSpacing 2s ease-in-out;
+  letter-spacing: -3px;
 }
 
 .initialHomeContainer {
@@ -52,7 +59,8 @@
 }
 
 .resultContainer {
-padding-top: 60px;
+  padding-top: 30px;
+  padding-bottom: 50px;
 }
 
 .postcodeForm {
@@ -68,6 +76,10 @@ margin-right: 16px;
 
 .postcodeSubmitButton {
 width: 80px;
+}
+
+.container {
+  width: 900px;
 }
 
 .formLabel {
@@ -103,4 +115,19 @@ font-size: 120px;
 
 .charts {
   display: flex;
+}
+
+.chartsCentred {
+  display: flex;
+  justify-content: center;
+}
+
+@keyframes expandLetterSpacing {
+  0% { letter-spacing: -3px;}
+  100% { letter-spacing: 5px; }
+}
+
+@keyframes contractLetterSpacing {
+  0% { letter-spacing: 5px;}
+  100% { letter-spacing: -3px; }
 }

@@ -1,24 +1,42 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Text,
   Input,
   FormControl,
   FormLabel,
-  Button, Img,
+  Button,
 } from '@chakra-ui/react';
 import Chart from 'react-apexcharts';
 import Geocode from 'react-geocode';
 import './home.css';
-import openWindowImage from '../gfx/open_window.png';
-import BouncingDotsLoader from '../components/BouncingDotsLogo'; // with import
+import BouncingDotsLoader from '../components/BouncingDotsLogo';
+import Lottie from 'react-lottie';
+import windowAnimation from '../gfx/lottie_files/open_window.json';
 
-function getChartOptions(name) {
+function convertNumberToPercentageOfMaxValue(number, maxValue) {
+  const value = parseFloat(number);
+
+  return (value * 100) / maxValue;
+}
+
+function convertPercentageOfMaxValueToNumber(percentage, maxValue) {
+  const value = parseFloat(percentage);
+
+  const number = (value * maxValue) / 100;
+
+  return parseInt(number);
+}
+
+function getChartOptions({ name, maxValue }) {
   // TODO - customise this
   return {
     series: [75],
     chart: {
-      height: 350,
+      animations: {
+        enabled: false
+      },
+      height: 300,
       type: 'radialBar',
       toolbar: {
         show: false,
@@ -67,7 +85,11 @@ function getChartOptions(name) {
           },
           value: {
             formatter: function (val) {
-              return parseInt(val);
+              if (!maxValue) {
+                return parseFloat(val);
+              }
+
+              return convertPercentageOfMaxValueToNumber(val, maxValue);
             },
             color: '#111',
             fontSize: '36px',
@@ -82,8 +104,7 @@ function getChartOptions(name) {
         shade: 'dark',
         type: 'horizontal',
         shadeIntensity: 0.5,
-        gradientToColors: ['#ABE5A1'],
-        inverseColors: true,
+        gradientToColors: ['#6c63ff'],
         opacityFrom: 1,
         opacityTo: 1,
         stops: [0, 100],
@@ -201,12 +222,22 @@ export const Home = () => {
     });
 
     // TODO - make a recommendation
-    setShouldOpenWindow(true);
+    setShouldOpenWindow(false);
+
     setIsLoading(false);
-  }, [convertPostcodeToLatLon, postcode, getAirQuality]);
+  }, [convertPostcodeToLatLon, postcode, getAirQuality, getPollenCount, getWeatherData]);
+
+  const windowAnimationOptions = {
+    loop: false,
+    autoplay: true,
+    animationData: windowAnimation,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid slice"
+    }
+  };
 
   return (
-    <Box className="box" minH="100vh" minW="800px">
+    <Box className="container" minH="100vh">
       <Box textAlign="center" fontSize="xl">
         { isInitialQuery ? (
           <Box className="initialHomeContainer" spacing={8}>
@@ -269,64 +300,73 @@ export const Home = () => {
               ) : (
               <Box className="resultContainer">
                 {shouldOpenWindow ? (
-                  <Box className="openWindowResultContainer">
+                  <Box className="windowResultContainer">
                     <Text className="openWindowText">
-                      Open the window
+                      open the window
                     </Text>
-                    <Img className="openWindowImage" src={openWindowImage} />
+
+                    <Lottie
+                      options={windowAnimationOptions}
+                      height={300}
+                      width={300}
+                      speed={1.25}
+                    />
                   </Box>
                 ) : (
-                  <Text pt={10} bg="white">
-                    Don't open the window
-                  </Text>
+                  <Box className="windowResultContainer">
+                    <Text className="closeWindowText">
+                      close the window
+                    </Text>
+
+                    <Lottie
+                      options={windowAnimationOptions}
+                      height={300}
+                      width={300}
+                      speed={1.25}
+                      direction={0}
+                    />
+                  </Box>
                 )}
 
                 <Box className="charts">
                   <Chart
-                    options={getChartOptions('Air Quality (AQI)')}
-                    series={[chartData.airQuality]}
+                    options={getChartOptions({name: 'Temp (°C)', maxValue: 35, colorOption: 'red'})}
+                    series={[convertNumberToPercentageOfMaxValue(chartData.temp, 35)]}
                     type="radialBar"
                     width="300"
                   />
                   <Chart
-                    options={getChartOptions('Grass Pollen')}
-                    series={[chartData.grassPollen]}
+                    options={getChartOptions({name: 'Air Quality (AQI)', maxValue: 300})}
+                    series={[convertNumberToPercentageOfMaxValue(chartData.airQuality, 300)]}
                     type="radialBar"
                     width="300"
                   />
                   <Chart
-                    options={getChartOptions('Weed Pollen')}
-                    series={[chartData.weedPollen]}
+                    options={getChartOptions({name: 'Wind (km/h)', maxValue: 40})}
+                    series={[convertNumberToPercentageOfMaxValue(chartData.windSpeed, 40)]}
                     type="radialBar"
                     width="300"
                   />
                 </Box>
                 <Box className="charts">
                   <Chart
-                    options={getChartOptions('Tree Pollen')}
-                    series={[chartData.treePollen]}
-                    type="radialBar"
-                    width="300"
-                  />
-                  <Chart
-                    options={getChartOptions('Wind Speed (km/h)')}
-                    series={[chartData.windSpeed]}
-                    type="radialBar"
-                    width="300"
-                  />
-                  <Chart
-                    options={getChartOptions('Humidity (%)')}
+                    options={getChartOptions({name: 'Humidity (%)'})}
                     series={[chartData.humidity]}
                     type="radialBar"
                     width="300"
                   />
-                </Box>
-                <Box className="charts">
                   <Chart
-                    options={getChartOptions('Temp (°C)')}
-                    series={[chartData.temp]}
+                    options={getChartOptions({name: 'Tree Pollen', maxValue: 350})}
+                    series={[convertNumberToPercentageOfMaxValue(chartData.treePollen, 350)]}
                     type="radialBar"
                     width="300"
+                  />
+                  <Chart
+                    options={getChartOptions({name: 'Grass Pollen', maxValue: 100})}
+                    series={[convertNumberToPercentageOfMaxValue(chartData.grassPollen, 100)]}
+                    type="radialBar"
+                    width="300"
+
                   />
                 </Box>
               </Box>
