@@ -2,10 +2,14 @@ import React, { useState, useCallback } from 'react';
 import {
   Box,
   Text,
-  Input, FormControl, FormLabel, Button,
+  Input,
+  FormControl,
+  FormLabel,
+  Button,
 } from '@chakra-ui/react';
-import Chart from "react-apexcharts";
-import Geocode from "react-geocode";
+import Chart from 'react-apexcharts';
+import Geocode from 'react-geocode';
+import './home.css';
 
 export const Home = () => {
   // true = open, false = don't open, undefined = waiting for recommendation
@@ -22,8 +26,8 @@ export const Home = () => {
       height: 350,
       type: 'radialBar',
       toolbar: {
-        show: false
-      }
+        show: false,
+      },
     },
     plotOptions: {
       radialBar: {
@@ -42,8 +46,8 @@ export const Home = () => {
             top: 3,
             left: 0,
             blur: 4,
-            opacity: 0.24
-          }
+            opacity: 0.24,
+          },
         },
         track: {
           background: '#fff',
@@ -54,8 +58,8 @@ export const Home = () => {
             top: -3,
             left: 0,
             blur: 4,
-            opacity: 0.35
-          }
+            opacity: 0.35,
+          },
         },
 
         dataLabels: {
@@ -64,18 +68,18 @@ export const Home = () => {
             offsetY: -10,
             show: true,
             color: '#888',
-            fontSize: '17px'
+            fontSize: '17px',
           },
           value: {
-            formatter: function(val) {
+            formatter: function (val) {
               return parseInt(val);
             },
             color: '#111',
             fontSize: '36px',
             show: true,
-          }
-        }
-      }
+          },
+        },
+      },
     },
     fill: {
       type: 'gradient',
@@ -87,16 +91,15 @@ export const Home = () => {
         inverseColors: true,
         opacityFrom: 1,
         opacityTo: 1,
-        stops: [0, 100]
-      }
+        stops: [0, 100],
+      },
     },
     stroke: {
-      lineCap: 'round'
+      lineCap: 'round',
     },
     labels: ['Air Quality (AQI)'],
   };
 
-// fetch air quality from ambee
   const getAirQuality = useCallback(async (lat, lng) => {
     const res = await fetch(
       `https://api.ambeedata.com/latest/by-lat-lng?lat=${lat}&lng=${lng}`,
@@ -104,7 +107,7 @@ export const Home = () => {
         method: 'GET',
         headers: {
           'x-api-key':
-            '98557c7e147dce2926573a404b7404eb6dccd673bc7044e4c0d13583b5bb6392',
+            '4f4249bcbb2f56cb1d360e237b69a88f9a9f4ed84d4bb5ec55f2966f4ef64777',
           'Content-type': 'application/json',
         },
       }
@@ -119,51 +122,23 @@ export const Home = () => {
     }
   }, []);
 
-
-  // get pollen count from breezometer
-  const getPollenCount = useCallback(async (lat, lon) => {
-    const res = await fetch(
-      `https://api.breezometer.com/pollen/v2/forecast/daily?lat=${lat}&lon=${lon}&days=1`,
-      {
-        method: 'GET',
-        headers: {
-          'key':'c238a4928d024f4baa4e51e514ef2196',
-          'Content-type': 'application/json',
-        },
-      }
-    );
-
-    if (res.ok === true) {
-      const { pcount } = await res.json();
-      
-      setPollenCount(pcount);
-
-      return pcount;
-    }
-  }, []);
-  
-
-  // use geocode to convert postcode to latlon
-  const convertPostcodeToLatLon = useCallback(async (postcode) => {
-    Geocode.setApiKey("AIzaSyD_G7EMILNLxo0NdXBtZnRS7QmIw0dZc4U");
-    Geocode.setLanguage("en");
+  const convertPostcodeToLatLon = useCallback(async postcode => {
+    Geocode.setApiKey('AIzaSyD_G7EMILNLxo0NdXBtZnRS7QmIw0dZc4U');
+    Geocode.setLanguage('en');
     Geocode.enableDebug();
 
     // TODO: maybe add error handling
     const response = await Geocode.fromAddress(postcode);
-    const { lat, lng }  = response.results[0].geometry.location;
+    const { lat, lng } = response.results[0].geometry.location;
 
     return { lat, lng };
   }, []);
 
-  //change the postcode when text in input box changes
-  const handlePostcodeChange = useCallback((event) => {
+  const handlePostcodeChange = useCallback(event => {
     setShouldOpenWindow(undefined);
-    
+
     setPostcode(event.target.value);
   }, []);
-  
-  // on postcode submission
   const handlePostcodeSubmit = useCallback(async () => {
     const res = await convertPostcodeToLatLon(postcode);
 
@@ -176,37 +151,46 @@ export const Home = () => {
     setShouldOpenWindow(false);
   }, [convertPostcodeToLatLon, postcode, getAirQuality]);
 
-    return (
-      <>
-        <Box minH="100vh">
-            <Box textAlign="center" fontSize="xl">
-                <Box spacing={8}>
-                  <FormControl>
-                    <FormLabel htmlFor='postcodeInput'>Postcode</FormLabel>
-                    <Input id="postcodeInput" value={postcode} onChange={handlePostcodeChange} placeholder='Enter a post code...'/>
-                    <Button onClick={handlePostcodeSubmit}>Let's go</Button>
-                  </FormControl>
+  return (
+    <Box className="box" minH="100vh">
+      <Box textAlign="center" fontSize="xl">
+        <Box spacing={8}>
+          <h1 className="h1">Fresh Air Pro</h1>
+          <FormControl>
+            <FormLabel className="formLabel" htmlFor="postcodeInput">
+              Description...
+            </FormLabel>
+            <Input
+              id="postcodeInput"
+              value={postcode}
+              onChange={handlePostcodeChange}
+              placeholder="Enter a post code..."
+            />
+            <Button onClick={handlePostcodeSubmit}>Let's go</Button>
+          </FormControl>
 
-                  { shouldOpenWindow !== undefined && (
-                    <>
-                      { shouldOpenWindow ? (
-                        <Text pt={10} bg="white">Open the window</Text>
-                      ) : (
-                        <Text pt={10} bg="white">Don't open the window</Text>
-                      )}
+          {shouldOpenWindow !== undefined && (
+            <>
+              {shouldOpenWindow ? (
+                <Text pt={10} bg="white">
+                  Open the window
+                </Text>
+              ) : (
+                <Text pt={10} bg="white">
+                  Don't open the window
+                </Text>
+              )}
 
-                      <Chart
-                        options={options}
-                        series={[airQualityData[0]["AQI"]]}
-                        type="radialBar"
-                        width="500"
-                      />
-                  
-                    </>
-                  )}
-                </Box>
-             </Box>
+              <Chart
+                options={options}
+                series={[airQualityData[0]['AQI']]}
+                type="radialBar"
+                width="500"
+              />
+            </>
+          )}
         </Box>
-        </>
-    );
-}
+      </Box>
+    </Box>
+  );
+};
