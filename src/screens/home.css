@@ -28,7 +28,6 @@
 
 .openWindowResultContainer {
   display: flex;
-  width: 800px;
   justify-content: center;
   align-items: center;
   flex-direction: column;
@@ -100,4 +99,8 @@ font-size: 120px;
 .navPostcodeInput {
   width: 150px;
   margin-right: 8px;
+}
+
+.charts {
+  display: flex;
 }

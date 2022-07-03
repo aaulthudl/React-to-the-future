@@ -13,19 +13,9 @@ import './home.css';
 import openWindowImage from '../gfx/open_window.png';
 import BouncingDotsLoader from '../components/BouncingDotsLogo'; // with import
 
-export const Home = () => {
-  // true = open, false = don't open
-  const [shouldOpenWindow, setShouldOpenWindow] = useState(false);
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [airQualityData, setAirQualityData] = useState();
-  const [postcode, setPostcode] = useState();
-
-  const [isInitialQuery, setIsInitialQuery] = useState(true);
-
+function getChartOptions(name) {
   // TODO - customise this
-  const options = {
+  return {
     series: [75],
     chart: {
       height: 350,
@@ -36,8 +26,8 @@ export const Home = () => {
     },
     plotOptions: {
       radialBar: {
-        startAngle: -135,
-        endAngle: 225,
+        startAngle: 0,
+        endAngle: 360,
         hollow: {
           margin: 0,
           size: '70%',
@@ -102,8 +92,20 @@ export const Home = () => {
     stroke: {
       lineCap: 'round',
     },
-    labels: ['Air Quality (AQI)'],
+    labels: [name],
   };
+}
+
+export const Home = () => {
+  // true = open, false = don't open
+  const [shouldOpenWindow, setShouldOpenWindow] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [chartData, setChartData] = useState({});
+  const [postcode, setPostcode] = useState();
+
+  const [isInitialQuery, setIsInitialQuery] = useState(true);
 
   const getAirQuality = useCallback(async (lat, lng) => {
     const res = await fetch(
@@ -117,35 +119,47 @@ export const Home = () => {
         },
       }
     );
-
-    if (res.ok === true) {
+    if (res.ok) {
       const { stations } = await res.json();
-
-      setAirQualityData(stations);
-
       return stations;
     }
   }, []);
 
   const getPollenCount = useCallback(async (lat, lng) => {
     const res = await fetch(
-      `https://api.ambeedata.com/latest/by-lat-lng?lat=${lat}&lng=${lng}`,
+      ` https://api.ambeedata.com/latest/pollen/by-lat-lng?lat=${lat}&lng=${lng}`,
       {
         method: 'GET',
         headers: {
           'x-api-key':
             '4f4249bcbb2f56cb1d360e237b69a88f9a9f4ed84d4bb5ec55f2966f4ef64777',
-          'Content-type': 'application/json',
+          'Content-type': 'application/json'
         },
       }
     );
 
-    if (res.ok === true) {
-      const { stations } = await res.json();
+    if (res.ok) {
+      const result = await res.json();
+      return result['data'][0]['Count'];
+    }
+  }, []);
 
-      setAirQualityData(stations);
+  const getWeatherData = useCallback(async (lat, lng) => {
+    const res = await fetch(
+      `http://api.weatherapi.com/v1/forecast.json?q=${lat},${lng}&days=1`,
+      {
+        method: 'GET',
+        headers: {
+          'key':
+            'e68bfc1463d44f05b9191544220307',
+          'Content-type': 'application/json'
+        },
+      }
+    );
 
-      return stations;
+    if (res.ok) {
+      const result = await res.json();
+      return result['current'];
     }
   }, []);
 
@@ -173,7 +187,18 @@ export const Home = () => {
 
     // TODO - put other fetches here
     const airQualityData = await getAirQuality(lat, lng);
-    const pollenCount = await getPollenCount(lat, lng);
+    const pollenData = await getPollenCount(lat, lng);
+    const weatherData = await getWeatherData(lat, lng);
+
+    setChartData({
+      airQuality: airQualityData[0]['AQI'],
+      grassPollen: pollenData['grass_pollen'],
+      treePollen: pollenData['tree_pollen'],
+      weedPollen: pollenData['weed_pollen'],
+      windSpeed: weatherData['gust_kph'],
+      humidity: weatherData['humidity'],
+      temp: weatherData['temp_c'],
+    });
 
     // TODO - make a recommendation
     setShouldOpenWindow(true);
@@ -256,12 +281,52 @@ export const Home = () => {
                   </Text>
                 )}
 
-                <Box>
+                <Box className="charts">
                   <Chart
-                    options={options}
-                    series={[airQualityData[0]['AQI']]}
+                    options={getChartOptions('Air Quality (AQI)')}
+                    series={[chartData.airQuality]}
                     type="radialBar"
-                    width="400"
+                    width="300"
+                  />
+                  <Chart
+                    options={getChartOptions('Grass Pollen')}
+                    series={[chartData.grassPollen]}
+                    type="radialBar"
+                    width="300"
+                  />
+                  <Chart
+                    options={getChartOptions('Weed Pollen')}
+                    series={[chartData.weedPollen]}
+                    type="radialBar"
+                    width="300"
+                  />
+                </Box>
+                <Box className="charts">
+                  <Chart
+                    options={getChartOptions('Tree Pollen')}
+                    series={[chartData.treePollen]}
+                    type="radialBar"
+                    width="300"
+                  />
+                  <Chart
+                    options={getChartOptions('Wind Speed (km/h)')}
+                    series={[chartData.windSpeed]}
+                    type="radialBar"
+                    width="300"
+                  />
+                  <Chart
+                    options={getChartOptions('Humidity (%)')}
+                    series={[chartData.humidity]}
+                    type="radialBar"
+                    width="300"
+                  />
+                </Box>
+                <Box className="charts">
+                  <Chart
+                    options={getChartOptions('Temp (°C)')}
+                    series={[chartData.temp]}
+                    type="radialBar"
+                    width="300"
                   />
                 </Box>
               </Box>
