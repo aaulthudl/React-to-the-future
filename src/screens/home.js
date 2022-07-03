@@ -123,7 +123,8 @@ export const Home = () => {
   }, []);
 
   const convertPostcodeToLatLon = useCallback(async postcode => {
-    Geocode.setApiKey('AIzaSyD_G7EMILNLxo0NdXBtZnRS7QmIw0dZc4U');
+    console.log(process.env.REACT_APP_API_KEY)
+    Geocode.setApiKey(process.env.REACT_APP_API_KEY);
     Geocode.setLanguage('en');
     Geocode.enableDebug();
 
