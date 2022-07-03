@@ -12,6 +12,7 @@ export const Home = () => {
   const [shouldOpenWindow, setShouldOpenWindow] = useState(undefined);
 
   const [airQualityData, setAirQualityData] = useState();
+  const [pollenCount, setPollenCount] = useState();
   const [postcode, setPostcode] = useState();
 
   // TODO - customise this
@@ -26,8 +27,8 @@ export const Home = () => {
     },
     plotOptions: {
       radialBar: {
-        startAngle: -135,
-        endAngle: 225,
+        startAngle: 0,
+        endAngle: 360,
         hollow: {
           margin: 0,
           size: '70%',
@@ -95,7 +96,7 @@ export const Home = () => {
     labels: ['Air Quality (AQI)'],
   };
 
-
+// fetch air quality from ambee
   const getAirQuality = useCallback(async (lat, lng) => {
     const res = await fetch(
       `https://api.ambeedata.com/latest/by-lat-lng?lat=${lat}&lng=${lng}`,
@@ -118,6 +119,31 @@ export const Home = () => {
     }
   }, []);
 
+
+  // get pollen count from breezometer
+  const getPollenCount = useCallback(async (lat, lon) => {
+    const res = await fetch(
+      `https://api.breezometer.com/pollen/v2/forecast/daily?lat=${lat}&lon=${lon}&days=1`,
+      {
+        method: 'GET',
+        headers: {
+          'key':'c238a4928d024f4baa4e51e514ef2196',
+          'Content-type': 'application/json',
+        },
+      }
+    );
+
+    if (res.ok === true) {
+      const { pcount } = await res.json();
+      
+      setPollenCount(pcount);
+
+      return pcount;
+    }
+  }, []);
+  
+
+  // use geocode to convert postcode to latlon
   const convertPostcodeToLatLon = useCallback(async (postcode) => {
     Geocode.setApiKey("AIzaSyD_G7EMILNLxo0NdXBtZnRS7QmIw0dZc4U");
     Geocode.setLanguage("en");
@@ -130,23 +156,28 @@ export const Home = () => {
     return { lat, lng };
   }, []);
 
+  //change the postcode when text in input box changes
   const handlePostcodeChange = useCallback((event) => {
     setShouldOpenWindow(undefined);
     
     setPostcode(event.target.value);
   }, []);
   
+  // on postcode submission
   const handlePostcodeSubmit = useCallback(async () => {
     const res = await convertPostcodeToLatLon(postcode);
 
     // TODO - put other fetches here
     const data = await getAirQuality(res.lat, res.lng);
+    // const pollen_data = await getPollenCount(res.lat, res.lng);
+   
 
     // TODO - make a recommendation
     setShouldOpenWindow(false);
   }, [convertPostcodeToLatLon, postcode, getAirQuality]);
 
     return (
+      <>
         <Box minH="100vh">
             <Box textAlign="center" fontSize="xl">
                 <Box spacing={8}>
@@ -170,10 +201,12 @@ export const Home = () => {
                         type="radialBar"
                         width="500"
                       />
+                  
                     </>
                   )}
                 </Box>
              </Box>
         </Box>
+        </>
     );
 }
