@@ -11,8 +11,8 @@ import Chart from 'react-apexcharts';
 import Geocode from 'react-geocode';
 import './home.css';
 import BouncingDotsLoader from '../components/BouncingDotsLogo';
-import Lottie from 'react-lottie';
 import windowAnimation from '../gfx/lottie_files/open_window.json';
+import Lottie from 'lottie-react-web';
 
 function convertNumberToPercentageOfMaxValue(number, maxValue) {
   const value = parseFloat(number);
@@ -25,7 +25,8 @@ function convertPercentageOfMaxValueToNumber(percentage, maxValue) {
 
   const number = (value * maxValue) / 100;
 
-  return parseInt(number);
+  // TODO - cba to truncate so convert
+  return parseInt(`${number}`);
 }
 
 function getChartOptions({ name, maxValue }) {
@@ -118,6 +119,8 @@ function getChartOptions({ name, maxValue }) {
 }
 
 export const Home = () => {
+  const [location, setLocation] = useState("");
+
   // true = open, false = don't open
   const [shouldOpenWindow, setShouldOpenWindow] = useState(false);
 
@@ -211,6 +214,9 @@ export const Home = () => {
     const pollenData = await getPollenCount(lat, lng);
     const weatherData = await getWeatherData(lat, lng);
 
+    const location = `${airQualityData[0].placeName}, ${airQualityData[0].city}`;
+    setLocation(location);
+
     setChartData({
       airQuality: airQualityData[0]['AQI'],
       grassPollen: pollenData['grass_pollen'],
@@ -221,20 +227,35 @@ export const Home = () => {
       temp: weatherData['temp_c'],
     });
 
-    // TODO - make a recommendation
-    setShouldOpenWindow(false);
+    let hScore = 0;
+    if (weatherData['temp_c'] > 30) {
+      hScore += 15;
+    } else if(weatherData['temp_c'] > 16){
+      hScore += 5;
+    } else {
+      hScore -= 5;
+    }
+
+    // High/V.High Pollen
+    if (pollenData['tree_pollen'] > 208  || pollenData['grass_pollen'] > 61) {
+      hScore -= 15;
+    }
+
+    // Good wind speed
+    if( 13 < weatherData['gust_kph'] < 40 ){
+      hScore += 5;
+    } // Low wind speed
+    else if (weatherData['gust_kph'] < 13){
+      hScore -= 5;
+    } // High wind speed
+    else if (weatherData['gust_kph'] > 40){
+      hScore -= 2;
+    }
+
+    setShouldOpenWindow(hScore > 0);
 
     setIsLoading(false);
   }, [convertPostcodeToLatLon, postcode, getAirQuality, getPollenCount, getWeatherData]);
-
-  const windowAnimationOptions = {
-    loop: false,
-    autoplay: true,
-    animationData: windowAnimation,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice"
-    }
-  };
 
   return (
     <Box className="container" minH="100vh">
@@ -299,6 +320,10 @@ export const Home = () => {
                 </Box>
               ) : (
               <Box className="resultContainer">
+                <Text className="locationContainer">
+                  {location}
+                </Text>
+
                 {shouldOpenWindow ? (
                   <Box className="windowResultContainer">
                     <Text className="openWindowText">
@@ -306,10 +331,11 @@ export const Home = () => {
                     </Text>
 
                     <Lottie
-                      options={windowAnimationOptions}
+                      options={{
+                        animationData: windowAnimation,
+                        loop: false,
+                      }}
                       height={300}
-                      width={300}
-                      speed={1.25}
                     />
                   </Box>
                 ) : (
@@ -319,11 +345,13 @@ export const Home = () => {
                     </Text>
 
                     <Lottie
-                      options={windowAnimationOptions}
+                      direction={-1}
+                      forceSegments={true}
+                      options={{
+                        animationData: windowAnimation,
+                        loop: false,
+                      }}
                       height={300}
-                      width={300}
-                      speed={1.25}
-                      direction={0}
                     />
                   </Box>
                 )}
