@@ -106,7 +106,7 @@ export const Home = () => {
         method: 'GET',
         headers: {
           'x-api-key':
-            '98557c7e147dce2926573a404b7404eb6dccd673bc7044e4c0d13583b5bb6392',
+            '4f4249bcbb2f56cb1d360e237b69a88f9a9f4ed84d4bb5ec55f2966f4ef64777',
           'Content-type': 'application/json',
         },
       }
